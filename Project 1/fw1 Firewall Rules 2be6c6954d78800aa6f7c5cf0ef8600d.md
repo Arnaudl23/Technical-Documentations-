@@ -1,0 +1,186 @@
+# fw1 Firewall Rules
+
+# FW1 – FortiGate 60F (v7.4.9)
+
+---
+
+### Alias
+
+| Name | IP |
+| --- | --- |
+| R1 Loopback1 | 1.1.5.1/32 |
+| Net MLS1-FW1 | 10.20.1.0/**24** |
+| MLS1-10.20.1.1 | 10.20.1.1/32 |
+| FW1 | 10.20.1.254/32 |
+| Net FW1-R1 | 10.20.2.0/**24** |
+| R1 | 10.20.2.254/32 |
+| Net MLS2-FW2 | 10.20.3.0/**24** |
+| FW2 | 10.20.3.254/32 |
+| Net FW2-R2 | 10.20.4.0/**24** |
+| R2 | 10.20.4.254/32 |
+| PF1 | 10.20.5.1/32 |
+| PVE1 | 10.20.5.253/32 |
+| PF2 | 10.20.8.1/32 |
+| PVE2 | 10.20.8.253/32 |
+| MLS2 - 10.20.10.2 | 10.20.10.2/32 |
+| R3 | 100.64.1.2/32 |
+| SCGN1 | 100.64.1.3/32 |
+| BBA2 | 100.64.2.0/**24** |
+| SCGN2 | 100.64.2.3/32 |
+| Net management | 172.20.1.0/**24** |
+| Vlan 1 Mgmt | 172.20.1.0/**24** |
+| SA1 | 172.20.1.1/32 |
+| Sa2 | 172.20.1.2/32 |
+| SA2 | 172.20.1.2/32 |
+| MLS2 | 172.20.1.253/32 |
+| MLS1 | 172.20.1.254/32 |
+| DMZ | 172.20.3.80/32 |
+| web | 172.20.3.80/32 |
+| Dmz-SrvWeb | 172.20.3.80/32 |
+| Net Bastion | 172.20.4.0/**24** |
+| Stronghold | 172.20.4.1/32 |
+| Bastion-1 | 172.20.4.1/32 |
+| stronghold | 172.20.4.1/32 |
+| Vlan 100 Users | 172.20.10.0/**24** |
+| AD1 | 172.20.20.1/32 |
+| FS1 | 172.20.20.2/32 |
+| LAN_LIN1 | 172.20.21.0/**24** |
+| LOG1 | 172.20.21.14/32 |
+| LogCollector | 172.20.21.14/32 |
+| DNS1 | 172.20.21.53/32 |
+| DHCP1 | 172.20.21.67/32 |
+| TFTP1 | 172.20.21.69/32 |
+| MAIL | 172.20.21.89/32 |
+| CA1 | 172.20.21.90/32 |
+| AD2 | 172.20.22.1/32 |
+| FS2 | 172.20.22.2/32 |
+| DNS2 | 172.20.23.53/32 |
+| DHCP2 | 172.20.23.67/32 |
+| CA2 | 172.20.23.90/32 |
+| BRWS1 | 172.20.30.0/**24** |
+| SIEM LAN TESTING | 192.168.0.0/**23** |
+| TEMP Splunk | 192.168.1.0/**24** |
+| Splunk Server | 192.168.1.1/32 |
+| Splunk Web client | 192.168.1.2/32 |
+| PVE3 | 192.168.1.253/32 |
+| Pve3-Prox | 192.168.1.253/32 |
+| FW3 | 192.168.1.254/32 |
+| CRIBL1 | 172.20.21.55/32 |
+| CRIBL2 | 172.20.23.55/32 |
+| SC4S | 172.20.21.15/32 |
+
+---
+
+### Address groups
+
+| Name | Members |
+| --- | --- |
+| Cisco Layer2 | SA1, Sa2, MLS1, MLS2 |
+| VlanLinux PVE1 | DNS1, DHCP1, TFTP1, CA1, LOG1, CRIBL1, SC4S |
+| VlanAD PVE1 | AD1, FS1 |
+| VlanLinux PVE2 | DNS2, DHCP2, CA2, CRIBL2 |
+| VlanAD PVE2 | FS2, AD2 |
+| Cisco Net-devices Infra | MLS1; MLS2, R1, R2, SA1, SA2, FW1, FW2  |
+
+---
+
+### Custom ports
+
+| Name | Ports |
+| --- | --- |
+| 8080 | 8080/TCP |
+| Proxmox | 8006/TCP |
+| Splunk 8000 | 8000/TCP |
+
+---
+
+### Firewall Policies
+
+### WAN1 → INT1
+
+| Rule name | Source interface | Destination interface | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| ALL PING wan test - INt | wan1 | int1 | all | all | -, TRACEROUTE | ICMP |
+| Logs r1 to Collector | wan1 | int1 | R1 Loopback1, R1 | LogCollector | 514 | UDP |
+| DNS access | wan1 | int1 | R1 | DNS1, DNS2 | 53 | UDP/TCP |
+
+---
+
+### WAN1 → DMZ
+
+| Rule name | Source interface | Destination interface | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| TEMP ANY ANY ANY | wan1 | dmz | all | all | ALL | ALL |
+
+---
+
+### INT1 → WAN1
+
+| Rule name | Source interface | Destination interface | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| Labo ALL ping vlan100 - wan | int1 | wan1 | all | all | -, TRACEROUTE | ICMP |
+| Web Access | int1 | wan1 | Vlan 100 Users, VlanAD PVE2, VlanLinux PVE1, PVE1, VlanLinux PVE2, PVE2, PF1, PF2 | all | 80,443 | TCP |
+| R1 SSH Mgmt | int1 | wan1 | Vlan 100 Users, Vlan 1 Mgmt | R2, R3, R1 | 22 | TCP |
+| Vlan Client proxmox access | int1 | wan1 | Vlan 100 Users | all | - | - |
+| NTP to R1 | int1 | wan1 | SA1, Sa2, R2, MLS1-10.20.1.1, MLS2 - 10.20.10.2, VlanAD PVE2, VlanLinux PVE1 | R1 | 123 | UDP |
+| SIEM access Http(s)/ssh | int1 | wan1 | Vlan 100 Users | Pve3-Prox, TEMP Splunk, R3, FW3, SIEM LAN TEST | 80, 443, 22, Proxmox, -, Splunk 8000 | TCP, ICMP |
+| IDS Logs | int1 | wan1 | all | all | 80, 443, 21, 69, Proxmox, 67-68, 53, 123, -, 161, 514, 3389, 22 | TCP, UDP, UDP/TCP, ICMP |
+
+---
+
+### INT1 → bastion
+
+| Rule name | Source interface | Destination interface | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| Labo Acces to bastion | int1 | Bastion | all | Net Bastion, Bastion | 22,80,8080 | ICMP, TCP |
+
+---
+
+### INT1 → DMZ
+
+| Rule name | Source interface | Destination interface | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| LABO DMZ SSH | int1 | dmz | Vlan 100 Users | Dmz-SrvWeb | 22 | TCP |
+| LocalUsers to DMZ Webserver | int1 | dmz | Vlan 100 Users Vlan 200 Guest | Dmz-SrvWeb | 80, 443 | TCP |
+
+---
+
+### Bastion → WAN1
+
+| Rule name | Source interface | Destination interface | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| Bastion web access
+(**disabled**) | Bastion | wan1 | Stronghold | all | 80,443,-,22 | TCP, ICMP |
+
+---
+
+### Bastion → INT1
+
+| Rule name | Source interface | Destination interface | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| Bastion SSH acces to Infra | bastion | int1 | Bastion | Vlan 1 Mgmt, Net MLS2-FW2, Net FW2-R2, BBA2, BRWS1, VlanAD PVE2, VlanLinux PVE1
+Cisco Net-devices Infra + fw1/2 | 22,3389 | ICMP, TCP |
+| DNS Access Bastion | bastion | int1 | Bastion | DNS1, DNS2 | 53 | UDP/TCP |
+
+---
+
+### DMZ → WAN1
+
+| Rule name | Source interface | Destination interface | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| dmz web acces | dmz | wan1 | Dmz-SrvWeb | all | 80,443, 53 | TCP |
+| NTP - WebServer | dmz | wan1 | Dmz-SrvWeb | R1 | 123 | UDP |
+
+---
+
+### VPNPOD  → bastion
+
+| Rule name | Source interface | Destination interface | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| vpn_VPNPOD_remote_0 | VPNPOD | bastion | VPNPOD_range | Bastion-1 | ALL | ALL |
+
+---
+
+### Implicit rules
+
+- Implicit deny all (traffic not explicitly authorized)
