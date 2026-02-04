@@ -1,0 +1,298 @@
+# Fw3 Configuration
+
+# Fw3 Setup
+
+# **FW3 Configuration**
+
+### **Objective**
+
+Deploy a consistent and secure basic configuration on the firewall to ensure its identification, time synchronization, secure console access and integration of the firewall into the network architecture.
+
+---
+
+### **Material used**
+
+Fortigate 60F ios v7.4.9
+
+### **Introduction**
+
+Basic configuration of the FW3 firewall
+
+### **Configuration**
+
+### **global**
+
+### Add a hostname and set the timezone
+
+```bash
+config system global
+set hostname "fw3"set timezone "Europe/Brussels"
+set virtual-switch-vlan disable
+set alias "FortiGate-60F"end
+```
+
+---
+
+### **Interface configuration**
+
+```bash
+config system interface
+edit "wan1"
+set vdom "root"
+set ip 192.168.2.1 255.255.255.0
+set type physical
+set description "Vers R3"
+set alias "wan1"
+set role wan
+next
+edit "internal1"
+set vdom "root"
+set ip 192.168.1.254 255.255.255.0
+set allowaccess ping https ssh http
+set type physical
+set description "Vers pve3"
+set alias "internal1"
+end
+```
+
+---
+
+**NTP configuration**
+
+```bash
+config system ntp
+set type custom
+config ntpserver
+edit 1
+set server 192.168.2.254
+end
+```
+
+---
+
+**Route configuration**
+
+```bash
+config router static
+    edit 1
+        set dst 100.64.2.0 255.255.255.0
+        set gateway 192.168.2.254
+        set device "wan1"
+    next
+    edit 2
+        set dst 100.64.1.0 255.255.255.0
+        set gateway 192.168.2.254
+        set device "wan1"
+    next
+    edit 3
+        set gateway 192.168.2.254
+        set device "wan1"
+    next
+    edit 4
+        set dst 172.20.10.0 255.255.255.0
+        set gateway 192.168.2.254
+        set device "wan1"
+    next
+end
+```
+
+---
+
+**Item configuration**
+
+Allows the use of objects for rules creation rather than risking human error by manually entering addresses.
+
+```bash
+config firewall address
+edit "Bastion"
+set subnet 172.20.4.1 255.255.255.255
+next
+edit "MLS1"
+set subnet 172.20.1.254 255.255.255.255
+next
+edit "SA1"
+set subnet 172.20.1.1 255.255.255.255
+next
+edit "Net Bastion"
+set subnet 172.20.4.0 255.255.255.0
+next
+edit "Bastion-1"
+set associated-interface "internal5"
+set subnet 172.20.4.1 255.255.255.255
+next
+edit "Vlan 100 Users"
+set subnet 172.20.10.0 255.255.255.0
+next
+edit "Vlan 1 Mgmt"
+set subnet 172.20.1.0 255.255.255.0
+next
+edit "Sa2"
+set subnet 172.20.1.2 255.255.255.255
+next
+edit "MLS2"
+set subnet 172.20.1.253 255.255.255.255
+next
+edit "BBA2"
+set subnet 100.64.2.0 255.255.255.0
+next
+edit "R2"
+set subnet 10.20.4.254 255.255.255.255
+next
+edit "SA2"
+set subnet 172.20.1.2 255.255.255.255
+next
+edit "R1"
+set subnet 10.20.2.254 255.255.255.255
+next
+edit "R3"
+set subnet 100.64.1.2 255.255.255.255
+next
+edit "SCGN1"
+set subnet 100.64.1.3 255.255.255.255
+next
+edit "SCGN2"
+set subnet 100.64.2.3 255.255.255.255
+next
+edit "FW1"
+set subnet 10.20.1.254 255.255.255.255
+next
+edit "FW2"
+set subnet 10.20.3.254 255.255.255.255
+next
+edit "FW3"
+set subnet 192.168.1.254 255.255.255.255
+next
+edit "PVE1"
+set subnet 10.20.5.253 255.255.255.255
+next
+edit "PVE2"
+set subnet 10.20.8.253 255.255.255.255
+next
+edit "PVE3"
+set subnet 192.168.1.253 255.255.255.255
+next
+edit "DMZ"
+set subnet 172.20.3.80 255.255.255.255
+next
+edit "bastion"
+set subnet 172.20.4.1 255.255.255.255
+next
+edit "Splunk Server"
+set subnet 192.168.1.1 255.255.255.255
+next
+edit "Splunk Web client"
+set subnet 192.168.1.2 255.255.255.255
+next
+edit "PF1"
+set subnet 10.20.5.1 255.255.255.255
+next
+edit "PF2"
+set subnet 10.20.8.1 255.255.255.255
+next
+edit "DNS1"
+set subnet 172.20.21.53 255.255.255.255
+next
+edit "DHCP1"
+set subnet 172.20.21.67 255.255.255.255
+next
+edit "CA1"
+set subnet 172.20.21.90 255.255.255.255
+next
+edit "TFTP1"
+set subnet 172.20.21.69 255.255.255.255
+next
+edit "AD1"
+set subnet 172.20.20.1 255.255.255.255
+next
+edit "FS1"
+set subnet 172.20.20.2 255.255.255.255
+next
+edit "BRWS1"
+set subnet 172.20.30.0 255.255.255.0
+next
+edit "DNS2"
+set subnet 172.20.23.53 255.255.255.255
+next
+edit "DHCP2"
+set subnet 172.20.23.67 255.255.255.255
+next
+edit "CA2"
+set subnet 172.20.23.90 255.255.255.255
+next
+edit "AD2"
+set subnet 172.20.22.1 255.255.255.255
+next
+edit "FS2"
+set subnet 172.20.22.2 255.255.255.255
+next
+edit "web"
+set subnet 172.20.3.80 255.255.255.255
+next
+edit "LOG1"
+set subnet 172.20.21.14 255.255.255.255
+next
+edit "LAN_LIN1"
+set subnet 172.20.21.0 255.255.255.0
+next
+edit "LogCollector"
+set subnet 172.20.21.14 255.255.255.255
+next
+edit "R1 Loopback1"
+set subnet 1.1.5.1 255.255.255.255
+next
+edit "MLS1-10.20.1.1"
+set subnet 10.20.1.1 255.255.255.255
+next
+edit "MLS2 - 10.20.10.2"
+set subnet 10.20.10.2 255.255.255.255
+next
+edit "SCS4S"
+set subnet 172.20.21.15 255.255.255.255
+next
+edit "CRIBL1"
+set subnet 172.20.21.55 255.255.255.255
+next
+edit "CRIBL2"
+set subnet 172.20.23.15 255.255.255.255
+next
+edit "UF-offi"
+set subnet 172.20.21.97 255.255.255.255
+next
+edit "Splunk PipelineCICD"
+set subnet 192.168.1.100 255.255.255.255
+next
+end
+```
+
+---
+
+Address Groups
+
+```bash
+config firewall addrgrp
+    edit "VlanAD PVE2"
+        set member "FS2" "AD2"
+    next
+    edit "VlanLinux PVE1"
+        set member "DNS1" "DHCP1" "LOG1" "Mx1"
+        "Tftp1" "SC4S" "CRIBL1" "UF-offi"
+    next
+    edit "VlanLinux PVE2"
+        set member "DNS2" "DHCP2" "CA2" "CRIBL2"
+    next
+    edit "VlanAD PVE1"
+        set member "AD1" "FS1"
+    next
+    edit "Siem Network"
+        set member "R3" "FW3" "PVE3" "Splunk Server" "Splunk PipelineCICD"
+    next
+end
+```
+
+---
+
+### Firewall policies
+
+[fw2 Firewall Rules](https://www.notion.so/fw2-Firewall-Rules-2be6c6954d788023b47bcc48ea714cdb?pvs=21)
+
+---
