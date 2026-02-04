@@ -1,0 +1,54 @@
+# Vlan / inter vlan
+
+```arduino
+
+Switch(config)#vlan 11
+Switch(config-vlan)#name Data
+Switch(config-vlan)#vlan 12
+Switch(config-vlan)#name Management
+Switch(config-vlan)#vlan 13
+Switch(config-vlan)#name Monitoring
+Switch(config-vlan)#vlan 14
+Switch(config-vlan)#name Native
+Switch(config-vlan)#vlan 15
+Switch(config-vlan)#name Trash
+Switch(config-vlan)#exit
+
+S1A(config)#interface vlan 12
+S1A(config-if)#ip address 172.20.12.3 255.255.255.0
+S1A(config-if)#no shut
+S1A(config-if)#exit
+S1A(config)#ip default-gateway 172.20.12.1
+S1A(config)#int g0/1
+S1A(config-if)#switchport mode access
+S1A(config-if)#switchport access vlan 12
+S1A(config-if)#no shut
+S1A(config-if)#int f0/1
+S1A(config-if)#switchport mode trunk
+S1A(config-if)#no s
+S1A(config-if)#exit
+
+S1A(config)#int range f0/2-12, f0/15-24, g0/2
+S1A(config-if-range)#sw mode access
+S1A(config-if-range)#sw access vlan 15
+S1A(config-if-range)#shut
+
+Switch(config)#int vlan 12
+Switch(config-if)#ip Interface Vlan12, changed state to upaddress 172.20.12.4 255.255.255.0
+Switch(config-if)#no shut
+Switch(config-if)#exit
+Switch(config)#ip default-gateway 172.20.12.1
+Switch(config)#int f0/15
+Switch(config-if)#switchport mode access
+Switch(config-if)#switchport access vlan 12
+Switch(config-if)#no shut
+Switch(config-if)#exit
+Switch(config)#int range fa0/1, g0/1
+Switch(config-if-range)#sw mode trunk
+Switch(config-if-range)#no shut
+Switch(config-if-range)#sw trunk native vlan 14
+Switch(config-if-range)#sw trunk allowed vlan 11-14
+Switch(config-if-range)#no shut
+Switch(config-if-range)#end
+
+```
