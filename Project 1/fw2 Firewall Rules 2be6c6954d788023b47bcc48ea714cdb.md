@@ -1,0 +1,115 @@
+# fw2 Firewall Rules
+
+# fw2 Firewall Rules
+
+# FW2 – FortiGate 60F (v7.4.9)
+
+---
+
+### Alias
+
+| Nom | IP |
+| --- | --- |
+| R2 loopback | 1.1.2.1/32 |
+| FW1 | 10.20.1.254/32 |
+| R1 | 10.20.2.254/32 |
+| FW2 | 10.20.3.254/32 |
+| R2 | 10.20.4.254/32 |
+| PF1 | 10.20.5.1/32 |
+| PVE1 | 10.20.5.253/32 |
+| PF2 | 10.20.8.1/32 |
+| PVE2 | 10.20.8.253/32 |
+| SCGN1 | 100.64.1.3/32 |
+| SCGN2 | 100.64.2.3/32 |
+| SA1 | 172.20.1.1/32 |
+| SA2 | 172.20.1.2/32 |
+| MLS2 | 172.20.1.253/32 |
+| MLS1 | 172.20.1.254/32 |
+| DMZ | 172.20.3.80/32 |
+| web | 172.20.3.80/32 |
+| Bastion | 172.20.4.1/32 |
+| bastion | 172.20.4.1/32 |
+| Vlan 100 user | 172.20.10.0/**24** |
+| AD1 | 172.20.20.1/32 |
+| FS1 | 172.20.20.2/32 |
+| LogCollector | 172.20.21.14/32 |
+| DNS1 | 172.20.21.53/32 |
+| DHCP1 | 172.20.21.67/32 |
+| SCP1 | 172.20.21.69/32 |
+| Tftp1 | 172.20.21.69/32 |
+| MX1 | 172.20.21.89/32 |
+| CA1 | 172.20.21.90/32 |
+| AD2 | 172.20.22.1/32 |
+| FS2 | 172.20.22.2/32 |
+| LAN_LIN2 | 172.20.23.0/**24** |
+| DNS2 | 172.20.23.53/32 |
+| DHCP2 | 172.20.23.67/32 |
+| CA2 | 172.20.23.90/32 |
+| BRWS1 | 172.20.30.1/32 |
+| Splunk Server | 192.168.1.1/32 |
+| Splunk Web client | 192.168.1.2/32 |
+| PVE3 | 192.168.1.253/32 |
+| FW3 | 192.168.1.254/32 |
+| R3 | 192.168.2.254/32 |
+| CRIBL1 | 172.20.21.55/32 |
+| CRIBL2 | 172.20.23.55/32 |
+| SC4S1 | 172.20.21.15/32 |
+| UF-offi | 172.20.21.97/32 |
+| Splunk PipelineCICD | 192.168.1.100/32 |
+
+---
+
+### Address Groups
+
+| Nom | Membres |
+| --- | --- |
+| VlanAD PVE1 | AD1, FS1 |
+| VlanAD PVE2 | AD2, FS2 |
+| VlanLinux PVE1 | CA1, DHCP1, DNS1, LogCollector, MX1, Tftp1, CRIBLE1, SC4S1, UF-offi |
+| VlanLinux PVE2 | CA2, DHCP2, DNS2, CRIBL2 |
+| Cisco Net-devices Infra | MLS1; MLS2, R1, R2, SA1, SA2, FW1, FW2  |
+| Siem Network | R3, FW3, PVE3, Splunk Server, Splunk PipelineCICD |
+
+---
+
+### Custom ports
+
+| Nom | Ports |
+| --- | --- |
+| splunk8000 | 8000/TCP |
+| Splunk9997 | 9997/TCP |
+| Splunk8089 | 8089/TCP |
+| Splunk HEC | 8088/TCP |
+| Proxmox | 8006/TCP |
+| forgejo | 3000/tcp |
+
+---
+
+### Firewall Policies
+
+### WAN1 → INT1
+
+| Nom de la règle | Interface source | Interface destination | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| Labo all ping wan-int | wan1 | int1 | all | all | - | ICMP, ICMP/UDP |
+| Logs R2 to logCollector | wan1 | int1 | R2 loopback | LogCollector | 514 | UDP |
+| DNS acces interne | wan1 | int1 | R2 | DNS1, DNS2 | 53 | UDP/TCP |
+
+---
+
+### INT1 → WAN1
+
+| Nom de la règle | Interface source | Interface destination | Source | Destination | Port | Protocol |
+| --- | --- | --- | --- | --- | --- | --- |
+| Labo ping all Vlan100-wan | int1 | wan1 | all | all | - | ICMP, ICMP/UDP |
+| SSH to R2 | int1 | wan1 | Bastion, Vlan 100 user | all | 22, - | TCP, ICMP |
+| Web Access | int1 | wan1 | PF1, PF2, PVE1, PVE2, Vlan 100 user, VlanAD PVE1, VlanAD PVE2, VlanLinux PVE1 | all | 80,443 | TCP |
+| Vlan Client Tailscale Access | int1 | wan1 | Vlan 100 user | all | - | - |
+| Labo Users Mgmt To SiemNetwork | int1 | wan1 | Vlan 100 user | Siem Network | 80, 443, 8000, 22, 8006, 3000 | TCP, ICMP |
+| Fluxlog vers Splunk | int1 | wan1 | VlanAD PVE1, VlanLinux PVE1, VlanLinux PVE2, VlanAD PVE2, Vm Charlie | Splunk Server | 8088, 8089, 9997 | ICMP, TCP |
+
+---
+
+### Implicit rules
+
+- Implicit deny all (traffic not explicitly authorized)
